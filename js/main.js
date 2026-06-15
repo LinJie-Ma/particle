@@ -33,20 +33,23 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 document.body.appendChild(renderer.domElement);
 
-// ─── Environment Map ────────────────────────────────────
+// ─── Environment Map (per-material, reduced intensity) ──
 const pmremGenerator = new THREE.PMREMGenerator(renderer);
 const environment = new RoomEnvironment();
 const envTexture = pmremGenerator.fromScene(environment).texture;
-scene.environment = envTexture;
 environment.dispose();
 pmremGenerator.dispose();
 
 // ─── Lighting ───────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0x404040, 0.5));
+// Moderate ambient — balls outside the beam still visible with soft fill
+scene.add(new THREE.AmbientLight(0x556688, 0.5));
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.1);
-dirLight.position.set(1, 1, 1);
-scene.add(dirLight);
+// Top-down narrow spotlight beam
+const topSpot = new THREE.SpotLight(0xffffff, 80, 40, Math.PI / 12, 0.4, 0.15);
+topSpot.position.set(0, 20, 0);
+topSpot.target.position.set(0, 0, 0);
+scene.add(topSpot);
+scene.add(topSpot.target);
 
 // ─── Mouse Ball (invisible, carries PointLight) ─────────
 const mouseBall = new THREE.Mesh(
@@ -74,6 +77,8 @@ const ballMaterial = new THREE.MeshStandardMaterial({
   color: 0xffffff,
   metalness: 0.0,
   roughness: 0.18,
+  envMap: envTexture,
+  envMapIntensity: 0.9,
 });
 
 // ─── Create Balls ───────────────────────────────────────
